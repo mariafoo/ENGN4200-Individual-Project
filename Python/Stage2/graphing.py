@@ -1,4 +1,4 @@
-# STAGE 3: Graphing
+# STAGE 2: Graphing
 # DATE 29 September 2015
 
 import serial, re, time
@@ -6,7 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # connect to Arduino port with 38400 baud
-arduino = serial.Serial('/dev/cu.HC-06-DevB',9600)
+# arduino = serial.Serial('/dev/cu.usbmodem1411', 9600) # connection via USB
+arduino = serial.Serial('/dev/cu.HC-06-DevB', 9600) # connection via Bluetooth
 
 hz = 8
 interval = 1/hz
