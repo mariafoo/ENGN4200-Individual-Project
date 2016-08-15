@@ -1,15 +1,23 @@
 # STAGE 2: Graphing
-# DATE 29 September 2015
+# DATE 15 August 2016
 
 import serial, re, time
 import numpy as np 
 import matplotlib.pyplot as plt
+import csv
+import sys
 
-# connect to Arduino port with 38400 baud
-# arduino = serial.Serial('/dev/cu.usbmodem1411', 9600) # connection via USB
-arduino = serial.Serial('/dev/cu.HC-06-DevB', 9600) # connection via Bluetooth
+csv_file = open(sys.argv[1], 'w')
+iterations_to_record = int(sys.argv[2])
 
-hz = 8
+acceleration_writer = csv.writer(csv_file, delimiter=',')
+acceleration_writer.writerow(["Time", "X", "Y", "Z"])
+
+# connect to Arduino port with 9600 baud
+arduino = serial.Serial('/dev/cu.usbmodem1411', 9600) # connection via USB
+# arduino = serial.Serial('/dev/cu.HC-06-DevB', 9600) # connection via Bluetooth
+
+hz = 5
 interval = 1/hz
 
 def sampling_round(value, hz):
@@ -23,7 +31,7 @@ future = now
 #print('future', future)
 
 lowest_y_coordinate = 0
-highest_y_coordinate = 800
+highest_y_coordinate = 1000
 
 plt.ion()
 accel_xdata = [0.0] * no_of_coordinates
@@ -36,23 +44,34 @@ line_accel_z, = plt.plot(x_axis, accel_zdata)
 plt.ylim([lowest_y_coordinate, highest_y_coordinate])
 plt.xlim([past, future])
 
+iterations_done = 1
 
-while True: 
+while (iterations_done < iterations_to_record):
     data = arduino.readline()[:-2]
     data = data.decode("utf-8")
+
     if data and data[0] == 'X': # start from x-coordinate values
-        coordinates = re.match(r'X.(\d{3}).Y.(\d{3}).Z.(\d{3})',data, re.I) # parse only values
-        #print(coordinates.group(1))
-        #print(coordinates.group(2))
-        #print(coordinates.group(3))
+        # ignore values appearing at the same time
         now = sampling_round(time.time(), hz)
+        
         if x_axis[-1] != now:
             x_axis.append(now)
         else: 
             continue
-        accel_xdata.append(int(coordinates.group(1)))
-        accel_ydata.append(int(coordinates.group(2)))
-        accel_zdata.append(int(coordinates.group(3)))
+
+        iterations_done += 1
+
+        coordinates = re.match(r'X.(\d+).Y.(\d+).Z.(\d+)', data, re.I) # parse only values
+
+        x_accel = int(coordinates.group(1)) 
+        y_accel = int(coordinates.group(2))
+        z_accel = int(coordinates.group(3))
+
+        acceleration_writer.writerow([now, x_accel, y_accel, z_accel]) 
+
+        accel_xdata.append(x_accel)
+        accel_ydata.append(y_accel)
+        accel_zdata.append(z_accel)
         del x_axis[0]
         del accel_xdata[0]
         del accel_ydata[0]
@@ -68,3 +87,5 @@ while True:
         print(x_axis[0],x_axis[-1])
     else:
         continue
+
+csv_file.close()
