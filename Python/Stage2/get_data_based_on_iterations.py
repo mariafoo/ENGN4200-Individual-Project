@@ -22,7 +22,6 @@ arduino = serial.Serial('/dev/cu.usbmodem1411', baudrate=9600) # connection via 
 
 # arduino.flushInput()
 
-
 skipped = False
 
 while (iterations_done < iterations_to_record):
