@@ -26,5 +26,5 @@ void loop() {
   Serial.println(axisValue);
   
   // 5 times a second
-  delay(200);
+  delay(30);
 }
